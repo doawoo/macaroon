@@ -1,0 +1,4 @@
+%{
+  "enacl": {:hex, :enacl, "1.1.1", "f65dc64d9bff2d8a534cb77aef14da5e7a2fa148987d87856f79a4745c9c2627", [:rebar3], [], "hexpm", "60d329ac3976008f774e21aba254671104976d61a792287615bb26816f09ea0f"},
+  "typed_struct": {:hex, :typed_struct, "0.2.1", "e1993414c371f09ff25231393b6430bd89d780e2a499ae3b2d2b00852f593d97", [:mix], [], "hexpm", "8f5218c35ec38262f627b2c522542f1eae41f625f92649c0af701a6fab2e11b3"},
+}
