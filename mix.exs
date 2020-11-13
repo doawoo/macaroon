@@ -22,6 +22,7 @@ defmodule Macaroon.MixProject do
   defp deps do
     [
       {:typed_struct, "~> 0.2"},
+      {:jason, "~> 1.2"},
       {:enacl, "~> 1.1"}
     ]
   end
