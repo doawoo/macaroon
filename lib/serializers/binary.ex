@@ -13,12 +13,12 @@ defmodule Macaroon.Serializers.Binary do
 
   @max_packet_size 65535
 
-  @spec encode(Macaroon.Types.Macaroon.t()) :: binary | {:error, any}
-  def encode(%Types.Macaroon{} = macaroon) do
-    with {:ok, location} <- create_packet("location", macaroon.location),
-      {:ok, id} <- create_packet("identifier", macaroon.public_identifier),
-      {:ok, sig} <- create_packet("signature", macaroon.signature),
-      {:ok, caveats_encoded} <- encode_caveats(macaroon) do
+  @spec encode(Macaroon.Types.Macaroon.t(), :v1) :: binary | {:error, any}
+  def encode(%Types.Macaroon{} = macaroon, :v1) do
+    with {:ok, location} <- create_packet_v1("location", macaroon.location),
+      {:ok, id} <- create_packet_v1("identifier", macaroon.public_identifier),
+      {:ok, sig} <- create_packet_v1("signature", macaroon.signature),
+      {:ok, caveats_encoded} <- encode_caveats_v1(macaroon) do
         location <> id <> caveats_encoded <> sig
         |> Base.encode64()
         |> String.trim_trailing("=")
@@ -27,12 +27,12 @@ defmodule Macaroon.Serializers.Binary do
       end
   end
 
-  defp encode_caveats(%Types.Macaroon{} = macaroon) do
+  defp encode_caveats_v1(%Types.Macaroon{} = macaroon) do
     cavs = macaroon.first_party_caveats ++ macaroon.third_party_caveats
     result = Enum.reduce_while(cavs, <<>>, fn caveat, packet ->
        encoded = case caveat.party do
-        :first -> encode_first_party_caveat(caveat)
-        :third -> encode_third_party_caveat(caveat)
+        :first -> encode_first_party_caveat_v1(caveat)
+        :third -> encode_third_party_caveat_v1(caveat)
        end
 
        with {:ok, c_encoded} <- encoded do
@@ -49,7 +49,7 @@ defmodule Macaroon.Serializers.Binary do
     end
   end
 
-  defp create_packet(key, data) when is_binary(key) and is_binary(data) do
+  defp create_packet_v1(key, data) when is_binary(key) and is_binary(data) do
     p_size = @packet_prefix_len + @newline_and_space_len + byte_size(key) + byte_size(data)
     if p_size > @max_packet_size do
       {:error, "Packet size is too large for key #{key} and provided data"}
@@ -63,14 +63,14 @@ defmodule Macaroon.Serializers.Binary do
     end
   end
 
-  defp encode_first_party_caveat(%Types.Caveat{} = c) do
-    create_packet("cid", c.caveat_id)
+  defp encode_first_party_caveat_v1(%Types.Caveat{} = c) do
+    create_packet_v1("cid", c.caveat_id)
   end
 
-  defp encode_third_party_caveat(%Types.Caveat{} = c) do
-    with {:ok, cid} <- create_packet("cid", c.caveat_id),
-    {:ok, vid} <- create_packet("vid", c.verification_key_id),
-    {:ok, location} <- create_packet("cl", c.location) do
+  defp encode_third_party_caveat_v1(%Types.Caveat{} = c) do
+    with {:ok, cid} <- create_packet_v1("cid", c.caveat_id),
+    {:ok, vid} <- create_packet_v1("vid", c.verification_key_id),
+    {:ok, location} <- create_packet_v1("cl", c.location) do
       cid <> vid <> location
     else
       {:error, _} = err -> err
