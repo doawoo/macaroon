@@ -61,4 +61,11 @@ defmodule Macaroon do
         third_party_caveats: [c | macaroon.third_party_caveats]
     }
   end
+
+  def prepare_for_request(%Types.Macaroon{} = macaroon, %Types.Macaroon{} = discharge_macaroon) do
+    copy = discharge_macaroon
+    key = Util.Crypto.truncate_or_pad_string(<<0>>, :enacl.secretbox_KEYBYTES)
+    new_sig = Util.Crypto.hmac_concat(key, macaroon.signature, discharge_macaroon.signature)
+    %Types.Macaroon{copy | signature: new_sig}
+  end
 end
