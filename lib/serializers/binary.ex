@@ -15,6 +15,7 @@ defmodule Macaroon.Serializers.Binary do
       {:ok, caveats_encoded} <- encode_caveats_v1(macaroon) do
         location <> id <> caveats_encoded <> sig
         |> Base.encode64(padding: false)
+        |> String.replace("/", "_")
       else
         {:error, _} = err -> err
       end

@@ -1,7 +1,6 @@
 defmodule BinarySerializerTest do
   use ExUnit.Case
 
-  alias Macaroon.Util.Crypto
   alias Macaroon.Serializers
 
   @m_location "https://example.com"
@@ -13,7 +12,7 @@ defmodule BinarySerializerTest do
     encoded_string = Serializers.Binary.encode(m, :v1)
 
     # This string constant encoded on http://macaroons.io/
-    assert encoded_string == "MDAyMGxvY2F0aW9uIGh0dHA6Ly9leGFtcGxlLmNvbQowMDE0aWRlbnRpZmllciAxMjM0CjAwMmZzaWduYXR1cmUgYa7UTK19vYhcFREA-WNi1962CpM6qOuDLBeL2BqYXj8K"
+    assert encoded_string == "MDAyMWxvY2F0aW9uIGh0dHBzOi8vZXhhbXBsZS5jb20KMDAxNGlkZW50aWZpZXIgMTIzNAowMDJmc2lnbmF0dXJlIGGu1Eytfb2IXBURAPljYtfetgqTOqjrgywXi9gamF4_Cg"
   end
 
 end
