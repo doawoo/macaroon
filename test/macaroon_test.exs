@@ -70,4 +70,28 @@ defmodule MacaroonTest do
 
     assert sigA != sigB
   end
+
+  test "Should prepare a macaroon for request sending (Macaroon.prepare_for_request/2)" do
+    # use a static nonce because we want to compare signatures
+    static_nonce = Crypto.truncate_or_pad_string(<<0>>, :enacl.secretbox_NONCEBYTES)
+
+    caveat_location = "http://auth.myCoolApp"
+    caveat_key = "KEY_SECRET_THIRD_PARTY"
+    caveat_id = "third_party_id"
+
+    m = Macaroon.create_macaroon("http://myCoolApp", "first_party_id", "KEY_SUPER_SECRET_FIRST_PARTY")
+    |> Macaroon.add_first_party_caveat("whoiam = user123")
+    |> Macaroon.add_third_party_caveat(caveat_location, caveat_id, caveat_key, static_nonce)
+
+    discharge = Macaroon.create_macaroon(caveat_location, caveat_id, caveat_key)
+    |> Macaroon.add_first_party_caveat("i_am_admin = true")
+
+    protected_m = Macaroon.prepare_for_request(m, discharge)
+
+    protected_sig = protected_m.signature
+    |> Base.encode16()
+    |> String.downcase()
+
+    assert protected_sig == "f297c1ec5db0072e1605dcc50d0becdb156765e9447be7a61036564e923b3357"
+  end
 end
