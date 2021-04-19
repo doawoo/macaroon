@@ -6,12 +6,12 @@ defmodule Macaroon do
   def create_macaroon(location, public_identifier, secret)
       when is_binary(location) and is_binary(public_identifier) and is_binary(secret) do
     derived_key = Util.Crypto.create_derived_key(secret)
-    inital_sig = :crypto.hmac(:sha256, derived_key, public_identifier)
+    initial_sig = :crypto.hmac(:sha256, derived_key, public_identifier)
 
     Types.Macaroon.build(
       location: location,
       public_identifier: public_identifier,
-      signature: inital_sig
+      signature: initial_sig
     )
   end
 
@@ -43,7 +43,9 @@ defmodule Macaroon do
 
     nonce = nonce || :crypto.strong_rand_bytes(:enacl.secretbox_NONCEBYTES)
 
-    verification_key_id = nonce <> :enacl.secretbox(derived_key, nonce, old_key)
+    cipher_text = :enacl.secretbox(derived_key, nonce, old_key)
+
+    verification_key_id = nonce <> cipher_text
 
     c =
       Types.Caveat.build(
@@ -62,7 +64,7 @@ defmodule Macaroon do
     }
   end
 
-  def prepare_for_request(%Types.Macaroon{} = macaroon, %Types.Macaroon{} = discharge_macaroon) do
+  def prepare_for_request(%Types.Macaroon{} = discharge_macaroon, %Types.Macaroon{} = macaroon) do
     copy = discharge_macaroon
     key = Util.Crypto.truncate_or_pad_string(<<0>>, :enacl.secretbox_KEYBYTES)
     new_sig = Util.Crypto.hmac_concat(key, macaroon.signature, discharge_macaroon.signature)

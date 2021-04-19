@@ -16,6 +16,7 @@ defmodule Macaroon.Verification do
           | {:ok, Macaroon.Types.Verification.VerifyContext.t()}
   def verify(%VerifyParameters{} = verification_params, %Types.Macaroon{} = macaroon, key, discharge_macaroons \\ []) when is_binary(key) and is_list(discharge_macaroons) do
     derived_key = Crypto.create_derived_key(key)
+
     ctx = VerifyContext.build(
       key: derived_key,
       calculated_signature: nil,
@@ -24,6 +25,16 @@ defmodule Macaroon.Verification do
     )
 
     %VerifyContext{} = result = verify_discharge(macaroon, macaroon, ctx)
+
+    result = if result.calculated_signature != macaroon.signature do
+      error = VerifyError.build(
+        type: :signature_not_matching,
+        details: "signature did not match"
+      )
+      %VerifyContext{result | errors: [error | result.errors]}
+    else
+      result
+    end
 
     if length(result.errors) > 0 do
       {:error, result}
@@ -59,6 +70,7 @@ defmodule Macaroon.Verification do
 
   defp verify_discharge(%Types.Macaroon{} = root_macaroon, %Types.Macaroon{} = macaroon, %VerifyContext{} = ctx) do
     sig = :crypto.hmac(:sha256, ctx.key, macaroon.public_identifier)
+
     ctx = %VerifyContext{ctx | calculated_signature: sig}
     |> verify_all_caveats(macaroon)
 
@@ -78,23 +90,31 @@ defmodule Macaroon.Verification do
   end
 
   defp verify_first_party_caveats(%VerifyContext{} = ctx, %Types.Macaroon{} = macaroon) do
-    Enum.reduce(macaroon.first_party_caveats, ctx, fn caveat, ctx -> do_verify_first_party_caveat(caveat, ctx) end)
+    Enum.reverse(macaroon.first_party_caveats)
+    |> Enum.reduce(ctx, fn caveat, ctx -> do_verify_first_party_caveat(caveat, ctx) end)
   end
 
   defp verify_third_party_caveats(%VerifyContext{} = ctx, %Types.Macaroon{} = macaroon) do
-    Enum.reduce(macaroon.third_party_caveats, ctx, fn caveat, ctx -> do_verify_third_party_caveat(caveat, macaroon, ctx) end)
+    Enum.reverse(macaroon.third_party_caveats)
+    |> Enum.reduce(ctx, fn caveat, ctx -> do_verify_third_party_caveat(caveat, macaroon, ctx) end)
   end
 
   defp do_verify_first_party_caveat(%Types.Caveat{} = caveat, %VerifyContext{} = ctx) do
     params = ctx.parameters
-    is_met = cond do
-      Enum.member?(params.predicates, caveat.caveat_id) -> true
-      Enum.find(params.callbacks, false, fn cb -> cb.(caveat.caveat_id) == true end) -> true
-      :else -> false
+
+    found_predicate = Enum.member?(params.predicates, caveat.caveat_id)
+
+    is_met = if found_predicate do
+      true
+    else
+      Enum.find(params.callbacks, nil, fn callback ->
+        callback.(caveat.caveat_id) == true
+      end) != nil
     end
 
     if is_met do
       sig = :crypto.hmac(:sha256, ctx.calculated_signature, caveat.caveat_id)
+
       %VerifyContext{ctx | calculated_signature: sig}
     else
       error = VerifyError.build(
@@ -111,13 +131,20 @@ defmodule Macaroon.Verification do
     with %Types.Macaroon{} = caveat_macaroon <- discharge_macaroon do
       caveat_key = extract_caveat_key(ctx.calculated_signature, caveat)
       tmp_ctx = %VerifyContext{ctx | key: caveat_key}
-      is_met = verify_discharge(macaroon, caveat_macaroon, tmp_ctx)
+
+      %VerifyContext{} = check = verify_discharge(macaroon, caveat_macaroon, tmp_ctx)
+
+      is_met = length(check.errors) == 0
 
       if is_met do
         sig = Crypto.hmac_concat(ctx.calculated_signature, caveat.verification_key_id, caveat.caveat_id)
         %VerifyContext{ctx | calculated_signature: sig}
       else
-
+        error = VerifyError.build(
+          type: :caveat_not_met,
+          details: "third-party caveat `#{caveat.caveat_id}` was not met"
+        )
+        %VerifyContext{ctx | errors: [error | ctx.errors]}
       end
     else
       _ ->
@@ -130,8 +157,10 @@ defmodule Macaroon.Verification do
   end
 
   defp extract_caveat_key(signature, %Types.Caveat{} = caveat) do
-    key = Crypto.truncate_or_pad_string(signature)
-    {nonce, cipher_text} = String.split_at(caveat.verification_key_id, :enacl.secretbox_NONCEBYTES)
+    key = Crypto.truncate_or_pad_string(signature, :enacl.secretbox_KEYBYTES)
+    nonce = :binary.part(caveat.verification_key_id, 0, :enacl.secretbox_NONCEBYTES)
+    cipher_text = :binary.part(caveat.verification_key_id, :enacl.secretbox_NONCEBYTES, byte_size(caveat.verification_key_id) - :enacl.secretbox_NONCEBYTES)
+
     case :enacl.secretbox_open(cipher_text, nonce, key) do
       {:ok, msg} -> msg
       _ -> <<0>>

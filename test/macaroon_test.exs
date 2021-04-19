@@ -86,7 +86,7 @@ defmodule MacaroonTest do
     discharge = Macaroon.create_macaroon(caveat_location, caveat_id, caveat_key)
     |> Macaroon.add_first_party_caveat("i_am_admin = true")
 
-    protected_m = Macaroon.prepare_for_request(m, discharge)
+    protected_m = Macaroon.prepare_for_request(discharge, m)
 
     protected_sig = protected_m.signature
     |> Base.encode16()
