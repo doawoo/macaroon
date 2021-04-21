@@ -33,6 +33,13 @@ defmodule Macaroon do
     }
   end
 
+  @spec add_third_party_caveat(
+          Macaroon.Types.Macaroon.t(),
+          binary,
+          binary,
+          binary,
+          false | nil | binary
+        ) :: Macaroon.Types.Macaroon.t()
   def add_third_party_caveat(%Types.Macaroon{} = macaroon, location, caveat_id, caveat_key, nonce \\ nil)
       when is_binary(location) and is_binary(caveat_id) and is_binary(caveat_key) do
     derived_key = caveat_key
@@ -64,6 +71,8 @@ defmodule Macaroon do
     }
   end
 
+  @spec prepare_for_request(Macaroon.Types.Macaroon.t(), Macaroon.Types.Macaroon.t()) ::
+          Macaroon.Types.Macaroon.t()
   def prepare_for_request(%Types.Macaroon{} = discharge_macaroon, %Types.Macaroon{} = macaroon) do
     copy = discharge_macaroon
     key = Util.Crypto.truncate_or_pad_string(<<0>>, :enacl.secretbox_KEYBYTES)

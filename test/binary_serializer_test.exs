@@ -7,12 +7,24 @@ defmodule BinarySerializerTest do
   @m_id "1234"
   @m_secret "SECRET_CODE"
 
-  test "Should seralize an empty macaroon into an encoded string" do
-    m = Macaroon.create_macaroon(@m_location, @m_id, @m_secret)
-    encoded_string = Serializers.Binary.encode(m, :v1)
+  describe "BinarySerializer" do
+    test "Should seralize an empty macaroon into an encoded string" do
+      m = Macaroon.create_macaroon(@m_location, @m_id, @m_secret)
+      encoded_string = Serializers.Binary.encode(m, :v1)
 
-    # This string constant encoded on http://macaroons.io/
-    assert encoded_string == "MDAyMWxvY2F0aW9uIGh0dHBzOi8vZXhhbXBsZS5jb20KMDAxNGlkZW50aWZpZXIgMTIzNAowMDJmc2lnbmF0dXJlIGGu1Eytfb2IXBURAPljYtfetgqTOqjrgywXi9gamF4_Cg"
+      decoded = Serializers.Binary.decode(encoded_string, :v1)
+      assert m == decoded
+    end
+
+    test "Should seralize a third party caveat" do
+      m = Macaroon.create_macaroon(@m_location, @m_id, @m_secret)
+      |> Macaroon.add_first_party_caveat("account = 1234")
+      |> Macaroon.add_third_party_caveat("location", "id", "key")
+
+      encoded_string = Serializers.Binary.encode(m, :v1)
+
+      decoded = Serializers.Binary.decode(encoded_string, :v1)
+      assert m == decoded
+    end
   end
-
 end

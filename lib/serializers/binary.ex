@@ -14,7 +14,7 @@ defmodule Macaroon.Serializers.Binary do
       {:ok, sig} <- create_packet_v1("signature", macaroon.signature),
       {:ok, caveats_encoded} <- encode_caveats_v1(macaroon) do
         location <> id <> caveats_encoded <> sig
-        |> Base.encode64(padding: false)
+        |> Base.url_encode64(padding: false)
         |> String.replace("/", "_")
       else
         {:error, _} = err -> err
@@ -72,7 +72,7 @@ defmodule Macaroon.Serializers.Binary do
     with {:ok, cid} <- create_packet_v1("cid", c.caveat_id),
     {:ok, vid} <- create_packet_v1("vid", c.verification_key_id),
     {:ok, location} <- create_packet_v1("cl", c.location) do
-      cid <> vid <> location
+      {:ok, cid <> vid <> location}
     else
       {:error, _} = err -> err
     end
@@ -86,14 +86,20 @@ defmodule Macaroon.Serializers.Binary do
     Enum.reduce(packets, base_mac, fn pkt, m ->
       case String.split(pkt, " ", parts: 2) do
         ["location", location] ->
-          %Types.Macaroon{m | location: location}
+          %Types.Macaroon{m | location: location |> String.trim_trailing()}
         ["identifier", id] ->
-          %Types.Macaroon{m | public_identifier: id}
+          %Types.Macaroon{m | public_identifier: id |> String.trim_trailing()}
         ["signature", sig] ->
-          %Types.Macaroon{m | signature: sig}
-        _ -> m
+          %Types.Macaroon{m | signature: sig |> String.trim_trailing()}
+        pkt ->
+          do_decode_caveat_v1(pkt, m)
       end
     end)
+  end
+
+  defp do_decode_caveat_v1(pkt, %Types.Macaroon{} = macaroon) do
+    require IEx; IEx.pry
+    macaroon
   end
 
   defp do_decode_packet_v1(bin, pkt_acc) when is_binary(bin) do
