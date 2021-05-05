@@ -14,9 +14,11 @@ defmodule JsonSerializerTest do
 
   test "Should seralize an empty macaroon into a JSON string" do
     m = Macaroon.create_macaroon(@m_location, @m_id, @m_secret)
-    sig = m.signature
-    |> Base.encode16()
-    |> String.downcase()
+
+    sig =
+      m.signature
+      |> Base.encode16()
+      |> String.downcase()
 
     json_string = Serializers.JSON.encode(m)
     obj = Jason.decode!(json_string)
@@ -28,60 +30,72 @@ defmodule JsonSerializerTest do
 
   test "Should encode a first party caveat" do
     pred = "foo=bar"
-    m = Macaroon.create_macaroon(@m_location, @m_id, @m_secret)
-    |> Macaroon.add_first_party_caveat(pred)
 
-    sig = m.signature
-    |> Base.encode16()
-    |> String.downcase()
+    m =
+      Macaroon.create_macaroon(@m_location, @m_id, @m_secret)
+      |> Macaroon.add_first_party_caveat(pred)
+
+    sig =
+      m.signature
+      |> Base.encode16()
+      |> String.downcase()
 
     json_string = Serializers.JSON.encode(m)
     obj = Jason.decode!(json_string)
 
     assert obj["signature"] == sig
-    assert obj["caveats"] == [%{
-      "cl" => nil,
-      "cid" => pred,
-      "vid" => nil
-    }]
+
+    assert obj["caveats"] == [
+             %{
+               "cl" => nil,
+               "cid" => pred,
+               "vid" => nil
+             }
+           ]
   end
 
   test "Should encode a third party caveat" do
-    static_nonce = Crypto.truncate_or_pad_string(<<0>>, :enacl.secretbox_NONCEBYTES)
+    static_nonce = Crypto.truncate_or_pad_string(<<0>>, :enacl.secretbox_NONCEBYTES())
 
-    m = Macaroon.create_macaroon(@m_location, @m_id, @m_secret)
-    |> Macaroon.add_third_party_caveat(@t_location, @t_id, @t_secret, static_nonce)
+    m =
+      Macaroon.create_macaroon(@m_location, @m_id, @m_secret)
+      |> Macaroon.add_third_party_caveat(@t_location, @t_id, @t_secret, static_nonce)
 
-    sig = m.signature
-    |> Base.encode16()
-    |> String.downcase()
+    sig =
+      m.signature
+      |> Base.encode16()
+      |> String.downcase()
 
     json_string = Serializers.JSON.encode(m)
     obj = Jason.decode!(json_string)
 
     c = m.third_party_caveats |> List.first()
 
-    vid_check = c.verification_key_id
-    |> Base.encode16()
-    |> String.downcase()
-
+    vid_check =
+      c.verification_key_id
+      |> Base.encode16()
+      |> String.downcase()
 
     assert obj["signature"] == sig
-    assert obj["caveats"] == [%{
-      "cl" => @t_location,
-      "cid" => @t_id,
-      "vid" => vid_check
-    }]
+
+    assert obj["caveats"] == [
+             %{
+               "cl" => @t_location,
+               "cid" => @t_id,
+               "vid" => vid_check
+             }
+           ]
   end
 
   test "Should decode a macaroon" do
-    static_nonce = Crypto.truncate_or_pad_string(<<0>>, :enacl.secretbox_NONCEBYTES)
+    static_nonce = Crypto.truncate_or_pad_string(<<0>>, :enacl.secretbox_NONCEBYTES())
 
     fp_pred = "foo=bar"
 
-    m = Macaroon.create_macaroon(@m_location, @m_id, @m_secret)
-    |> Macaroon.add_first_party_caveat(fp_pred)
-    |> Macaroon.add_third_party_caveat(@t_location, @t_id, @t_secret, static_nonce)
+    m =
+      Macaroon.create_macaroon(@m_location, @m_id, @m_secret)
+      |> Macaroon.add_first_party_caveat(fp_pred)
+      |> Macaroon.add_third_party_caveat(@t_location, @t_id, @t_secret, static_nonce)
 
     json_string = Serializers.JSON.encode(m)
 

@@ -7,7 +7,8 @@ defmodule Macaroon.Util.Crypto do
   end
 
   @spec hmac_concat(binary, binary, binary) :: binary
-  def hmac_concat(key, dataA, dataB) when is_binary(key) and is_binary(dataA) and is_binary(dataB) do
+  def hmac_concat(key, dataA, dataB)
+      when is_binary(key) and is_binary(dataA) and is_binary(dataB) do
     hash_a = :crypto.hmac(:sha256, key, dataA)
     hash_b = :crypto.hmac(:sha256, key, dataB)
     :crypto.hmac(:sha256, key, hash_a <> hash_b)
@@ -19,8 +20,10 @@ defmodule Macaroon.Util.Crypto do
       byte_size(str) > target_len ->
         {str, _rest} = String.split_at(str, target_len)
         str
+
       byte_size(str) < target_len ->
         str <> String.duplicate(<<0>>, target_len - byte_size(str))
+
       byte_size(str) == target_len ->
         str
     end

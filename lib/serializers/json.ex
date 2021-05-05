@@ -1,7 +1,14 @@
 defmodule Macaroon.Serializers.JSON do
   alias Macaroon.Types
 
-  @spec encode(Macaroon.Types.Macaroon.t()) :: binary
+  @spec encode(Macaroon.Types.Macaroon.t()) ::
+          {:error,
+           %{
+             :__exception__ => any,
+             :__struct__ => Jason.EncodeError | Protocol.UndefinedError,
+             optional(atom) => any
+           }}
+          | {:ok, binary}
   def encode(%Types.Macaroon{} = macaroon) do
     %{
       "location" => macaroon.location,
@@ -10,7 +17,8 @@ defmodule Macaroon.Serializers.JSON do
       "caveats" =>
         Enum.map(macaroon.first_party_caveats, &encode_caveat/1) ++
           Enum.map(macaroon.third_party_caveats, &encode_caveat/1)
-    } |> Jason.encode!()
+    }
+    |> Jason.encode()
   end
 
   @spec decode(binary) :: Types.Macaroon.t()
@@ -19,9 +27,11 @@ defmodule Macaroon.Serializers.JSON do
 
     location = raw_map["location"]
     identifier = raw_map["identifier"]
-    signature = raw_map["signature"]
-    |> String.upcase()
-    |> Base.decode16!()
+
+    signature =
+      raw_map["signature"]
+      |> String.upcase()
+      |> Base.decode16!()
 
     first_party_caveats = Enum.filter(raw_map["caveats"], fn c -> c["vid"] == nil end)
     third_party_caveats = Enum.filter(raw_map["caveats"], fn c -> c["vid"] != nil end)
@@ -36,18 +46,19 @@ defmodule Macaroon.Serializers.JSON do
   end
 
   defp encode_caveat(%Types.Caveat{} = caveat) do
-    vid = if caveat.verification_key_id != nil do
-      caveat.verification_key_id
-      |> Base.encode16()
-      |> String.downcase()
-    else
-      nil
-    end
+    vid =
+      if caveat.verification_key_id != nil do
+        caveat.verification_key_id
+        |> Base.encode16()
+        |> String.downcase()
+      else
+        nil
+      end
 
     %{
       "cl" => caveat.location,
       "cid" => caveat.caveat_id,
-      "vid" => vid,
+      "vid" => vid
     }
   end
 
@@ -61,9 +72,10 @@ defmodule Macaroon.Serializers.JSON do
   end
 
   defp decode_caveat(%{"cl" => cl, "cid" => cid, "vid" => vid}) do
-    verification_id = vid
-    |> String.upcase()
-    |> Base.decode16!()
+    verification_id =
+      vid
+      |> String.upcase()
+      |> Base.decode16!()
 
     Types.Caveat.build(
       location: cl,

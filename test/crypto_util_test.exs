@@ -20,7 +20,8 @@ defmodule CryptoUtilTest do
   end
 
   test "Concats two HMAC digests and digests them with the same key" do
-    digest = Crypto.hmac_concat("!!key555222%", "dataA", "dataB")
+    digest =
+      Crypto.hmac_concat("!!key555222%", "dataA", "dataB")
       |> Base.encode16()
       |> String.downcase()
 
