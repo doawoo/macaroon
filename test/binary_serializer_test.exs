@@ -11,7 +11,7 @@ defmodule BinarySerializerTest do
   describe "BinarySerializer" do
     test "Should seralize an empty macaroon into an encoded string" do
       m = Macaroon.create_macaroon(@m_location, @m_id, @m_secret)
-      encoded_string = Serializers.Binary.encode(m, :v1)
+      {:ok, encoded_string} = Serializers.Binary.encode(m, :v1)
 
       decoded = Serializers.Binary.decode(encoded_string, :v1)
       assert m == decoded
@@ -22,7 +22,7 @@ defmodule BinarySerializerTest do
         Macaroon.create_macaroon(@m_location, @m_id, @m_secret)
         |> Macaroon.add_first_party_caveat("account = 1234")
 
-      encoded_string = Serializers.Binary.encode(m, :v1)
+      {:ok, encoded_string} = Serializers.Binary.encode(m, :v1)
 
       decoded = Serializers.Binary.decode(encoded_string, :v1)
       assert m == decoded
@@ -40,7 +40,7 @@ defmodule BinarySerializerTest do
           static_nonce
         )
 
-      encoded_string = Serializers.Binary.encode(m, :v1)
+      {:ok, encoded_string} = Serializers.Binary.encode(m, :v1)
 
       decoded = Serializers.Binary.decode(encoded_string, :v1)
       assert m == decoded
@@ -51,9 +51,7 @@ defmodule BinarySerializerTest do
         Macaroon.create_macaroon(@m_location, @m_id, @m_secret)
         |> Macaroon.add_first_party_caveat(String.pad_leading("a = ", 70000, "b"))
 
-      encoded_string = Serializers.Binary.encode(m, :v1)
-
-      assert {:error, _} = encoded_string
+       assert {:error, _} = Serializers.Binary.encode(m, :v1)
     end
 
     test "Should fail to serialize a third party packet that is too long" do
@@ -61,9 +59,7 @@ defmodule BinarySerializerTest do
         Macaroon.create_macaroon(@m_location, @m_id, @m_secret)
         |> Macaroon.add_third_party_caveat(String.pad_leading("a = ", 70000, "b"), "id", "key")
 
-      encoded_string = Serializers.Binary.encode(m, :v1)
-
-      assert {:error, _} = encoded_string
+        assert {:error, _} = Serializers.Binary.encode(m, :v1)
     end
   end
 end
