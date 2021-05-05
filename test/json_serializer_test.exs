@@ -20,7 +20,7 @@ defmodule JsonSerializerTest do
       |> Base.encode16()
       |> String.downcase()
 
-    json_string = Serializers.JSON.encode(m)
+    {:ok, json_string} = Serializers.JSON.encode(m)
     obj = Jason.decode!(json_string)
 
     assert obj["signature"] == sig
@@ -40,7 +40,7 @@ defmodule JsonSerializerTest do
       |> Base.encode16()
       |> String.downcase()
 
-    json_string = Serializers.JSON.encode(m)
+    {:ok, json_string} = Serializers.JSON.encode(m)
     obj = Jason.decode!(json_string)
 
     assert obj["signature"] == sig
@@ -66,7 +66,7 @@ defmodule JsonSerializerTest do
       |> Base.encode16()
       |> String.downcase()
 
-    json_string = Serializers.JSON.encode(m)
+    {:ok, json_string} = Serializers.JSON.encode(m)
     obj = Jason.decode!(json_string)
 
     c = m.third_party_caveats |> List.first()
@@ -97,7 +97,7 @@ defmodule JsonSerializerTest do
       |> Macaroon.add_first_party_caveat(fp_pred)
       |> Macaroon.add_third_party_caveat(@t_location, @t_id, @t_secret, static_nonce)
 
-    json_string = Serializers.JSON.encode(m)
+    {:ok, json_string} = Serializers.JSON.encode(m)
 
     decoded_macaroon = Macaroon.Serializers.JSON.decode(json_string)
 
