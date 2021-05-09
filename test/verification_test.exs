@@ -38,7 +38,13 @@ defmodule MacaroonVerificationTest do
     test "should verify when all general first-party caveats are met (Verification.satisfy_general/1..2)",
          context do
       result =
-        Verification.satisfy_exact("test = caveat")
+        Verification.satisfy_general(fn predicate ->
+          if predicate == "test = caveat" do
+            true
+          else
+            false
+          end
+        end)
         |> Verification.satisfy_general(fn predicate ->
           if predicate == "user = 1234" do
             true

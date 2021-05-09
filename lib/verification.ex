@@ -55,7 +55,7 @@ defmodule Macaroon.Verification do
 
   @spec satisfy_general(fun) :: struct
   def satisfy_general(callback) when is_function(callback) do
-    VerifyParameters.build(callback: [callback])
+    VerifyParameters.build(callbacks: [callback])
   end
 
   def satisfy_exact(predicate) when is_binary(predicate) do
@@ -127,6 +127,7 @@ defmodule Macaroon.Verification do
       if found_predicate do
         true
       else
+        require IEx; IEx.pry
         Enum.find(params.callbacks, nil, fn callback ->
           callback.(caveat.caveat_id) == true
         end) != nil
