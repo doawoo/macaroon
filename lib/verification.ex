@@ -1,4 +1,7 @@
 defmodule Macaroon.Verification do
+  @moduledoc """
+  Module used to verify a Macaroon
+  """
   alias Macaroon.Types
   alias Types.Verification.VerifyError
   alias Types.Verification.VerifyParameters
@@ -128,6 +131,7 @@ defmodule Macaroon.Verification do
         true
       else
         require IEx
+
         Enum.find(params.callbacks, nil, fn callback ->
           callback.(caveat.caveat_id) == true
         end) != nil

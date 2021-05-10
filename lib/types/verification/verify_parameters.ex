@@ -1,4 +1,7 @@
 defmodule Macaroon.Types.Verification.VerifyParameters do
+  @moduledoc """
+  Struct module for Verification parameters
+  """
   use TypedStruct
   use StructBuilder
 

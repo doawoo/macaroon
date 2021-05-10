@@ -1,4 +1,7 @@
 defmodule Macaroon.Serializers.Binary do
+  @moduledoc """
+  Module used to encode/decode a Macaroon as a binary, and encode it into Base64 (URL Safe, no padding)
+  """
   alias Macaroon.Types
 
   @packet_prefix_len 4

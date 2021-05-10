@@ -1,4 +1,7 @@
 defmodule Macaroon.Serializers.JSON do
+  @moduledoc """
+  Module used to encode/decode a Macaroon as a JSON string
+  """
   alias Macaroon.Types
 
   @spec encode(Macaroon.Types.Macaroon.t()) ::

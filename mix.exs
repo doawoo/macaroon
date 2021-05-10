@@ -8,7 +8,8 @@ defmodule Macaroon.MixProject do
       elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      test_coverage: [tool: ExCoveralls]
+      test_coverage: [tool: ExCoveralls],
+      docs: [main: "readme", extras: ["README.md"]]
     ]
   end
 
@@ -23,6 +24,7 @@ defmodule Macaroon.MixProject do
   defp deps do
     [
       {:excoveralls, "~> 0.13", only: [:test]},
+      {:ex_doc, "~> 0.24", only: :dev, runtime: false},
       {:typed_struct, "~> 0.2"},
       {:jason, "~> 1.2"},
       {:enacl, "~> 1.1"}

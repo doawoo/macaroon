@@ -1,10 +1,5 @@
 defmodule StructBuilder do
-  @moduledoc """
-  This module defines a macro to be used in modules that provide a typedstruct.
-  Calling the `struct_builder()` macro inside the module will define a `build/1` function on
-  the module.
-  """
-
+  @moduledoc false
   @spec __using__(any) ::
           {:import, [{:context, StructBuilder}, ...], [{:__aliases__, [...], [...]}, ...]}
   defmacro __using__(_opts) do

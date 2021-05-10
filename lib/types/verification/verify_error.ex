@@ -1,4 +1,7 @@
 defmodule Macaroon.Types.Verification.VerifyError do
+  @moduledoc """
+  Struct module for Verification errors
+  """
   use TypedStruct
   use StructBuilder
 

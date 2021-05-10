@@ -1,4 +1,7 @@
 defmodule Macaroon.Types.Macaroon do
+  @moduledoc """
+  Struct module for base Macaroon type
+  """
   use TypedStruct
   use StructBuilder
 

@@ -1,4 +1,7 @@
 defmodule Macaroon.Types.Caveat do
+  @moduledoc """
+  Struct module for base Caveat type
+  """
   use TypedStruct
   use StructBuilder
 

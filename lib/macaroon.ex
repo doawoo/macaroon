@@ -1,10 +1,17 @@
 defmodule Macaroon do
+  @moduledoc """
+  This is the primary public interface for Elixir Macaroons
+  """
+
   alias Macaroon.Types
   alias Macaroon.Util
 
   alias Macaroon.Serializers.Binary
   alias Macaroon.Serializers.JSON
 
+  @doc """
+  Create an empty Macaroon with a provided `location`, `public_id` and `secret`
+  """
   @spec create_macaroon(binary, binary, binary) :: Types.Macaroon.t()
   def create_macaroon(location, public_identifier, secret)
       when is_binary(location) and is_binary(public_identifier) and is_binary(secret) do
@@ -18,6 +25,9 @@ defmodule Macaroon do
     )
   end
 
+  @doc """
+  Add a first-party caveat to a Macaroon provided a `caveat_predicate`
+  """
   @spec add_first_party_caveat(Macaroon.Types.Macaroon.t(), binary) :: Macaroon.Types.Macaroon.t()
   def add_first_party_caveat(%Types.Macaroon{} = macaroon, caveat_predicate)
       when is_binary(caveat_predicate) do
@@ -36,6 +46,9 @@ defmodule Macaroon do
     }
   end
 
+  @doc """
+  Add a third-party caveat to a Macaroon provided a `location`, `caveat_id`, and secret `caveat_key`
+  """
   @spec add_third_party_caveat(
           Macaroon.Types.Macaroon.t(),
           binary,
@@ -81,6 +94,14 @@ defmodule Macaroon do
     }
   end
 
+  @doc """
+  This prepares a Macaroon for delegation to another third-party authorization service.
+  Returns a "protected" (or bound) discharge Macaroon.
+
+  `discharge_macaroon` - The Macaroon that will be sent to the third-party service.
+
+  `macaroon` - The Macaroon that the `discharge_macaroon` will be bound to. (The "root" Macaroon)
+  """
   @spec prepare_for_request(Macaroon.Types.Macaroon.t(), Macaroon.Types.Macaroon.t()) ::
           Macaroon.Types.Macaroon.t()
   def prepare_for_request(%Types.Macaroon{} = discharge_macaroon, %Types.Macaroon{} = macaroon) do
@@ -90,6 +111,11 @@ defmodule Macaroon do
     %Types.Macaroon{copy | signature: new_sig}
   end
 
+  @doc """
+  Serializes a Macaroon into a more transmittable format
+
+  2nd argument for "type" can be `:binary` or `:json`
+  """
   @spec serialize(Macaroon.Types.Macaroon.t(), :binary | :json) ::
           nil
           | {:error,
@@ -110,6 +136,13 @@ defmodule Macaroon do
     Binary.encode(macaroon, :v1)
   end
 
+  @doc """
+  Deserializes a JSON or Base64 serialized Macaroon string
+
+  2nd argument for "type" can be `:binary` or `:json`
+
+  Returns a `Macaroon.Types.Macaroon` struct
+  """
   @spec deserialize(binary, :binary | :json) :: Macaroon.Types.Macaroon.t()
   def deserialize(macaroon_json, :json) when is_binary(macaroon_json) do
     JSON.decode(macaroon_json)

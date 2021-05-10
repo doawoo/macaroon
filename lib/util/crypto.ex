@@ -1,4 +1,8 @@
 defmodule Macaroon.Util.Crypto do
+  @moduledoc """
+  This module contains utility cryptographic functions
+  """
+
   @key_gen_string "macaroons-key-generator"
 
   @spec create_derived_key(binary) :: binary
