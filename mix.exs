@@ -7,7 +7,8 @@ defmodule Macaroon.MixProject do
       version: "0.1.0",
       elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      test_coverage: [tool: ExCoveralls]
     ]
   end
 
@@ -21,6 +22,7 @@ defmodule Macaroon.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:excoveralls, "~> 0.13", only: [:test]},
       {:typed_struct, "~> 0.2"},
       {:jason, "~> 1.2"},
       {:enacl, "~> 1.1"}

@@ -29,4 +29,7 @@ jobs:
     - name: Install dependencies
       run: sudo apt install -y libsodium-dev && mix deps.get
     - name: Run tests
-      run: mix test --cover
+      run: mix coveralls.github
+      env:
+        MIX_ENV: test
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
