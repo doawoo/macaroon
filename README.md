@@ -1,4 +1,4 @@
-# Macaroon
+# Macaroons (For Elixir)
 
 
 ![Elixir CI](https://github.com/doawoo/macaroon/workflows/Elixir%20CI/badge.svg?branch=main)
@@ -8,6 +8,28 @@
 
 
 Cookies but better. For Elixir.
+
+Requires: libsodium (can usually be easily installed using your favorite package manager)
+
+---
+
+## Table of Contents
+
+* [What Are They?](https://github.com/doawoo/macaroon#what-are-they)
+  * [Basic Summary](https://github.com/doawoo/macaroon#basic-summary)
+  * [Caveats](https://github.com/doawoo/macaroon#caveats)
+  * [Verification](https://github.com/doawoo/macaroon#verification)
+  * [Discharging](https://github.com/doawoo/macaroon#discharging)
+* [Examples](https://github.com/doawoo/macaroon#examples)
+  * [Create a Macaroon](https://github.com/doawoo/macaroon#creating-a-macaroon)
+  * [Adding Caveats](https://github.com/doawoo/macaroon#adding-caveats)
+  * [Verification](https://github.com/doawoo/macaroon#verification-1)
+  * [Serialization and Deserialize](https://github.com/doawoo/macaroon#serialization-and-deserialize)
+    * [JSON](https://github.com/doawoo/macaroon#json)
+    * [Binary](https://github.com/doawoo/macaroon#binary)
+* [Misc](https://github.com/doawoo/macaroon#misc)
+  * [Building on Windows](https://github.com/doawoo/macaroon#building-on-windows)
+---
 
 If you'd like to know all the details about Macaroons, I encourage you to read the [research paper](https://research.google/pubs/pub41892/)!
 
@@ -98,3 +120,25 @@ macaroon = Macaroon.deserialize(json_string, :json)
 
 macaroon = Macaroon.deserialize(url_base64_string, :binary)
 ```
+
+## Misc
+
+### Building on Windows
+
+(I really recommend using the Windows Linux Subsystem. It makes installing libsodium and most other things much easier. But if you must run this natively on Windows, follow these tips!)
+
+1. Download the latest release of libsodium, compile it using Visual Studio's compiler using x86 ReleaseDLL config. 
+2. Take note of the full path where the `.dll`, `.lib` are generated. Also note where the `include` directory is located.
+3. Rename the generated `.lib` to `.dll.a`.
+
+Then using a Developer Command Prompt navigate to your project:
+
+1. `set lib=%lib%;<PATH_TO_FOLDER_THAT_CONTAINS_libsodium.dll.a>`
+2. `set include=%include%;<PATH_TO_FOLDER_THAT_CONTAINS_sodium.h>`
+3. `mix deps.get` and `mix deps.compile`
+
+---
+
+<p align="center">
+  🍪 Baked with 🐾 by Digit (@doawoo) | https://puppy.surf
+</p>
