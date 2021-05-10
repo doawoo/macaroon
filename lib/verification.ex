@@ -127,7 +127,9 @@ defmodule Macaroon.Verification do
       if found_predicate do
         true
       else
-        require IEx; IEx.pry
+        require IEx
+        IEx.pry()
+
         Enum.find(params.callbacks, nil, fn callback ->
           callback.(caveat.caveat_id) == true
         end) != nil

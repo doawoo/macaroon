@@ -13,8 +13,10 @@ defmodule Macaroon.Serializers.Binary do
          {:ok, id} <- create_packet_v1("identifier", macaroon.public_identifier),
          {:ok, sig} <- create_packet_v1("signature", macaroon.signature),
          {:ok, caveats_encoded} <- encode_caveats_v1(macaroon) do
-      encoded_string = (location <> id <> caveats_encoded <> sig)
-      |> Base.url_encode64(padding: false)
+      encoded_string =
+        (location <> id <> caveats_encoded <> sig)
+        |> Base.url_encode64(padding: false)
+
       {:ok, encoded_string}
     else
       {:error, _} = err -> err

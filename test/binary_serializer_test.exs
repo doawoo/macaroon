@@ -11,9 +11,8 @@ defmodule BinarySerializerTest do
   describe "BinarySerializer" do
     test "Should seralize an empty macaroon into an encoded string" do
       m = Macaroon.create_macaroon(@m_location, @m_id, @m_secret)
-      {:ok, encoded_string} = Serializers.Binary.encode(m, :v1)
-
-      decoded = Serializers.Binary.decode(encoded_string, :v1)
+      {:ok, encoded_string} = Macaroon.serialize(m, :binary)
+      decoded = Macaroon.deserialize(encoded_string, :binary)
       assert m == decoded
     end
 

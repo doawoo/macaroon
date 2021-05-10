@@ -109,4 +109,13 @@ defmodule Macaroon do
   def serialize(%Types.Macaroon{} = macaroon, :binary) do
     Binary.encode(macaroon, :v1)
   end
+
+  @spec deserialize(binary, :binary | :json) :: Macaroon.Types.Macaroon.t()
+  def deserialize(macaroon_json, :json) when is_binary(macaroon_json) do
+    JSON.decode(macaroon_json)
+  end
+
+  def deserialize(macaroon_binary, :binary) when is_binary(macaroon_binary) do
+    Binary.decode(macaroon_binary, :v1)
+  end
 end

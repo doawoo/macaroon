@@ -15,17 +15,10 @@ defmodule JsonSerializerTest do
   test "Should seralize an empty macaroon into a JSON string" do
     m = Macaroon.create_macaroon(@m_location, @m_id, @m_secret)
 
-    sig =
-      m.signature
-      |> Base.encode16()
-      |> String.downcase()
+    {:ok, json_string} = Macaroon.serialize(m, :json)
+    decoded = Macaroon.deserialize(json_string, :json)
 
-    {:ok, json_string} = Serializers.JSON.encode(m)
-    obj = Jason.decode!(json_string)
-
-    assert obj["signature"] == sig
-    assert obj["location"] == @m_location
-    assert obj["identifier"] == @m_id
+    assert decoded == m
   end
 
   test "Should encode a first party caveat" do
