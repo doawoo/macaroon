@@ -9,6 +9,7 @@ defmodule Macaroon.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       test_coverage: [tool: ExCoveralls],
+      package: package(),
       docs: [main: "readme", extras: ["README.md"]]
     ]
   end
@@ -28,6 +29,17 @@ defmodule Macaroon.MixProject do
       {:typed_struct, "~> 0.2"},
       {:jason, "~> 1.2"},
       {:enacl, "~> 1.1"}
+    ]
+  end
+
+  defp package do
+    [
+      links: %{
+        "GitHub" => "https://github.com/doawoo/macaroon",
+        "Paper (Birgisson, Arnar, et al.)" => "https://research.google/pubs/pub41892/"
+      },
+      description: "Library that implements Macaroons in Elixir",
+      licenses: ["MIT"]
     ]
   end
 end

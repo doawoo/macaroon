@@ -4,6 +4,7 @@
 ![Elixir CI](https://github.com/doawoo/macaroon/workflows/Elixir%20CI/badge.svg?branch=main)
 [![Coverage Status](https://coveralls.io/repos/github/doawoo/macaroon/badge.svg?branch=main)](https://coveralls.io/github/doawoo/macaroon?branch=main)
 ![MIT License](https://img.shields.io/badge/License-MIT-important)
+![Hex.pm](https://img.shields.io/hexpm/v/macaroon)
 
 
 Cookies but better. For Elixir.
