@@ -77,3 +77,23 @@ result = Verification.satisfy_exact("upload_limit = 4MB")
 
 # result will be {:ok, macaroon} or {:error, reason_for_failure}
 ```
+
+### Serialization and Deserialize
+
+#### JSON
+
+```elixir
+{:ok, json_string} = Macaroon.create_macaroon("http://my.cool.app", "public_id", "SUPER_SECRET_KEY")
+  |> Macaroon.serialize(:json)
+
+macaroon = Macaroon.deserialize(json_string, :json)
+```
+
+#### Binary
+
+```elixir
+{:ok, url_base64_string} = Macaroon.create_macaroon("http://my.cool.app", "public_id", "SUPER_SECRET_KEY")
+  |> Macaroon.serialize(:binary)
+
+macaroon = Macaroon.deserialize(url_base64_string, :binary)
+```
