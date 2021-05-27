@@ -49,7 +49,7 @@ defmodule MacaroonTest do
       |> String.downcase()
 
     c =
-      m.third_party_caveats
+      m.caveats
       |> List.first()
 
     vid =

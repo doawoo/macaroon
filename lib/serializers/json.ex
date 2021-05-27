@@ -17,9 +17,7 @@ defmodule Macaroon.Serializers.JSON do
       "location" => macaroon.location,
       "identifier" => macaroon.public_identifier,
       "signature" => macaroon.signature |> Base.encode16() |> String.downcase(),
-      "caveats" =>
-        Enum.map(macaroon.first_party_caveats, &encode_caveat/1) ++
-          Enum.map(macaroon.third_party_caveats, &encode_caveat/1)
+      "caveats" => Enum.map(macaroon.caveats, &encode_caveat/1)
     }
     |> Jason.encode()
   end
@@ -36,15 +34,13 @@ defmodule Macaroon.Serializers.JSON do
       |> String.upcase()
       |> Base.decode16!()
 
-    first_party_caveats = Enum.filter(raw_map["caveats"], fn c -> c["vid"] == nil end)
-    third_party_caveats = Enum.filter(raw_map["caveats"], fn c -> c["vid"] != nil end)
+    caveats = raw_map["caveats"] || []
 
     Types.Macaroon.build(
       location: location,
       public_identifier: identifier,
       signature: signature,
-      first_party_caveats: Enum.map(first_party_caveats, &decode_caveat/1),
-      third_party_caveats: Enum.map(third_party_caveats, &decode_caveat/1)
+      caveats: Enum.map(caveats, &decode_caveat/1)
     )
   end
 

@@ -62,7 +62,7 @@ defmodule JsonSerializerTest do
     {:ok, json_string} = Serializers.JSON.encode(m)
     obj = Jason.decode!(json_string)
 
-    c = m.third_party_caveats |> List.first()
+    c = m.caveats |> List.first()
 
     vid_check =
       c.verification_key_id

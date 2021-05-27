@@ -42,7 +42,7 @@ defmodule Macaroon do
     %Types.Macaroon{
       macaroon
       | signature: new_sig,
-        first_party_caveats: macaroon.first_party_caveats ++ [c]
+        caveats: macaroon.caveats ++ [c]
     }
   end
 
@@ -90,7 +90,7 @@ defmodule Macaroon do
     %Types.Macaroon{
       macaroon
       | signature: concat_digest,
-        third_party_caveats: macaroon.third_party_caveats ++ [c]
+        caveats: macaroon.caveats ++ [c]
     }
   end
 

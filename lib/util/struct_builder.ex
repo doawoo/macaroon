@@ -1,3 +1,4 @@
+# coveralls-ignore-start
 defmodule StructBuilder do
   @moduledoc false
   @spec __using__(any) ::
@@ -22,3 +23,4 @@ defmodule StructBuilder do
     end
   end
 end
+# coveralls-ignore-stop

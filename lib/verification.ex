@@ -106,17 +106,12 @@ defmodule Macaroon.Verification do
   end
 
   defp verify_all_caveats(%VerifyContext{} = ctx, %Types.Macaroon{} = macaroon) do
-    ctx
-    |> verify_first_party_caveats(macaroon)
-    |> verify_third_party_caveats(macaroon)
-  end
-
-  defp verify_first_party_caveats(%VerifyContext{} = ctx, %Types.Macaroon{} = macaroon) do
-    Enum.reduce(macaroon.first_party_caveats, ctx, fn caveat, ctx -> do_verify_first_party_caveat(caveat, ctx) end)
-  end
-
-  defp verify_third_party_caveats(%VerifyContext{} = ctx, %Types.Macaroon{} = macaroon) do
-    Enum.reduce(macaroon.third_party_caveats, ctx, fn caveat, ctx -> do_verify_third_party_caveat(caveat, macaroon, ctx) end)
+    Enum.reduce(macaroon.caveats, ctx, fn cav, ctx ->
+      case cav.party do
+        :first -> do_verify_first_party_caveat(cav, ctx)
+        :third -> do_verify_third_party_caveat(cav, macaroon, ctx)
+      end
+    end)
   end
 
   defp do_verify_first_party_caveat(%Types.Caveat{} = caveat, %VerifyContext{} = ctx) do
@@ -209,9 +204,7 @@ defmodule Macaroon.Verification do
         byte_size(caveat.verification_key_id) - :enacl.secretbox_NONCEBYTES()
       )
 
-    case :enacl.secretbox_open(cipher_text, nonce, key) do
-      {:ok, msg} -> msg
-      _ -> <<0>>
-    end
+    {:ok, msg} = :enacl.secretbox_open(cipher_text, nonce, key)
+    msg
   end
 end

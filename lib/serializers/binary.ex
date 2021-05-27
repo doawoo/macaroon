@@ -26,6 +26,7 @@ defmodule Macaroon.Serializers.Binary do
     end
   end
 
+  @spec decode(binary, :v1) :: Macaroon.Types.Macaroon.t()
   def decode(bin_macaroon, :v1) when is_binary(bin_macaroon) do
     {:ok, decoded} = Base.url_decode64(bin_macaroon, padding: false)
     do_decode_macaroon_v1(decoded)
@@ -34,10 +35,11 @@ defmodule Macaroon.Serializers.Binary do
   # Encoder v1 functions
 
   defp encode_caveats_v1(%Types.Macaroon{} = macaroon) do
-    cavs = macaroon.first_party_caveats ++ macaroon.third_party_caveats
+    cavs = macaroon.caveats
 
     result =
       Enum.reduce_while(cavs, <<>>, fn caveat, packet ->
+        IO.inspect(caveat)
         encoded =
           case caveat.party do
             :first -> encode_first_party_caveat_v1(caveat)
@@ -91,57 +93,51 @@ defmodule Macaroon.Serializers.Binary do
   # Decoder v1 functions
 
   defp do_decode_macaroon_v1(decoded_bin) when is_binary(decoded_bin) do
-    packets = do_decode_packets_v1(decoded_bin, []) |> Enum.reverse()
+    packets = do_decode_packets_v1(decoded_bin, [])
     base_mac = Types.Macaroon.build()
-    do_parse_packets_v1(packets, base_mac)
+    mac = do_parse_packets_v1(packets, base_mac)
+    %Types.Macaroon{mac | caveats: Enum.reverse(mac.caveats)}
+  end
+
+  defp build_third_party_caveat(location, vid, id) do
+    location = String.replace(location, "cl ", "") |> String.trim_trailing()
+    verification_id = String.replace(vid, "vid ", "") |> String.trim_trailing()
+    caveat_id = String.replace(id, "cid ", "") |> String.trim_trailing()
+
+    %Types.Caveat{
+      party: :third,
+      caveat_id: caveat_id,
+      location: location,
+      verification_key_id: verification_id
+    }
   end
 
   defp do_parse_packets_v1(packets, %Types.Macaroon{} = macaroon) when length(packets) > 0 do
     [pkt | rest] = packets
-    next = List.first(rest) || ""
 
-    macaroon =
+    {macaroon, rest} =
       case pkt do
         "location " <> location ->
-          %Types.Macaroon{macaroon | location: location |> String.trim_trailing()}
+          {%Types.Macaroon{macaroon | location: location |> String.trim_trailing()}, rest}
 
         "identifier " <> id ->
-          %Types.Macaroon{macaroon | public_identifier: id |> String.trim_trailing()}
+          {%Types.Macaroon{macaroon | public_identifier: id |> String.trim_trailing()}, rest}
 
         "signature " <> sig ->
-          %Types.Macaroon{macaroon | signature: sig |> String.trim_trailing()}
-
-        "cid " <> caveat_id ->
-          if !String.starts_with?(next, "vid ") do
-            c = Types.Caveat.build(caveat_id: caveat_id |> String.trim_trailing())
-            %Types.Macaroon{macaroon | first_party_caveats: [c | macaroon.first_party_caveats]}
-          else
-            c =
-              Types.Caveat.build(
-                party: :third,
-                caveat_id: caveat_id |> String.trim_trailing()
-              )
-
-            %Types.Macaroon{macaroon | third_party_caveats: [c | macaroon.third_party_caveats]}
-          end
-
-        "vid " <> verification_id ->
-          c = List.first(macaroon.third_party_caveats)
-          c = %Types.Caveat{c | verification_key_id: verification_id |> String.trim_trailing()}
-
-          %Types.Macaroon{
-            macaroon
-            | third_party_caveats: List.replace_at(macaroon.third_party_caveats, 0, c)
-          }
+          {%Types.Macaroon{macaroon | signature: sig |> String.trim_trailing()}, rest}
 
         "cl " <> caveat_location ->
-          c = List.first(macaroon.third_party_caveats)
-          c = %Types.Caveat{c | location: caveat_location |> String.trim_trailing()}
+          [vid, id | new_rest] = rest
+          c = build_third_party_caveat(caveat_location, vid, id)
 
-          %Types.Macaroon{
-            macaroon
-            | third_party_caveats: List.replace_at(macaroon.third_party_caveats, 0, c)
-          }
+          {%Types.Macaroon{macaroon | caveats: macaroon.caveats ++ [c]},
+           new_rest}
+
+        "cid " <> caveat_id ->
+          c = Types.Caveat.build(caveat_id: caveat_id |> String.trim_trailing())
+
+          {%Types.Macaroon{macaroon | caveats: macaroon.caveats ++ [c]},
+           rest}
       end
 
     do_parse_packets_v1(rest, macaroon)
