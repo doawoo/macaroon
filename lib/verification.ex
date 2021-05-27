@@ -112,13 +112,11 @@ defmodule Macaroon.Verification do
   end
 
   defp verify_first_party_caveats(%VerifyContext{} = ctx, %Types.Macaroon{} = macaroon) do
-    Enum.reverse(macaroon.first_party_caveats)
-    |> Enum.reduce(ctx, fn caveat, ctx -> do_verify_first_party_caveat(caveat, ctx) end)
+    Enum.reduce(macaroon.first_party_caveats, ctx, fn caveat, ctx -> do_verify_first_party_caveat(caveat, ctx) end)
   end
 
   defp verify_third_party_caveats(%VerifyContext{} = ctx, %Types.Macaroon{} = macaroon) do
-    Enum.reverse(macaroon.third_party_caveats)
-    |> Enum.reduce(ctx, fn caveat, ctx -> do_verify_third_party_caveat(caveat, macaroon, ctx) end)
+    Enum.reduce(macaroon.third_party_caveats, ctx, fn caveat, ctx -> do_verify_third_party_caveat(caveat, macaroon, ctx) end)
   end
 
   defp do_verify_first_party_caveat(%Types.Caveat{} = caveat, %VerifyContext{} = ctx) do
