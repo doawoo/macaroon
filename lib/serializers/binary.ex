@@ -39,7 +39,6 @@ defmodule Macaroon.Serializers.Binary do
 
     result =
       Enum.reduce_while(cavs, <<>>, fn caveat, packet ->
-        IO.inspect(caveat)
         encoded =
           case caveat.party do
             :first -> encode_first_party_caveat_v1(caveat)
