@@ -48,6 +48,21 @@ defmodule Macaroon do
 
   @doc """
   Add a third-party caveat to a Macaroon provided a `location`, `predicate`, and random secret `caveat_key`
+
+  `location` is a hint to where the client must go to prove this caveat
+
+  `predicate` is a string that contains `caveat_key` and the predicate we want to have this caveat assert
+  you should encrypt this in such a way that only the other party can decrypt it (pub/priv keys)
+
+  OR
+
+  retreieve an ID from the other service first and use that as the ID.
+
+  `caveat_key` is the freshly generated secret key that will be encrypted using the current signature of the Macaroon
+
+  `nonce` - you SHOULD NOT override this unless you know what you're doing (it defaults to secure random bytes)
+  it is used when encrypting the `caveat_key` and should never be static unless you are testing something that requires
+  the signature to be static.
   """
   @spec add_third_party_caveat(
           Macaroon.Types.Macaroon.t(),
@@ -98,7 +113,7 @@ defmodule Macaroon do
   This prepares a Macaroon for delegation to another third-party authorization service.
   Returns a "protected" (or bound) discharge Macaroon.
 
-  `discharge_macaroon` - The Macaroon that will be sent to the third-party service.
+  `discharge_macaroon` - The Macaroon that will be sent back to the originating service
 
   `macaroon` - The Macaroon that the `discharge_macaroon` will be bound to. (The "root" Macaroon)
   """
