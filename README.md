@@ -9,7 +9,7 @@
 
 Cookies but better. For Elixir.
 
-**Currently In Development -- Fully Fucntional But Needs More Testing :)**
+**Currently In Development -- Fully Functional But Needs More Testing :)**
 
 Requires: libsodium (can usually be easily installed using your favorite package manager)
 
