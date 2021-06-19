@@ -22,6 +22,8 @@ Requires: libsodium (can usually be easily installed using your favorite package
   * [Caveats](https://github.com/doawoo/macaroon#caveats)
   * [Verification](https://github.com/doawoo/macaroon#verification)
   * [Discharging](https://github.com/doawoo/macaroon#discharging)
+    * [Well-Known RSA public key](https://github.com/doawoo/macaroon#well-known-rsa-public-key)
+    * [Round Trip](https://github.com/doawoo/macaroon#round-trip)
 * [Examples](https://github.com/doawoo/macaroon#examples)
   * [Create a Macaroon](https://github.com/doawoo/macaroon#creating-a-macaroon)
   * [Adding Caveats](https://github.com/doawoo/macaroon#adding-caveats)
@@ -71,7 +73,28 @@ General verification allows the service author to provide simple callbacks which
 
 ### Discharging
 
-TODO
+When you want to have a third-party validate a caveat, you must have them issue you a "discharge" Macaroon that can prove that specific caveat.
+There are 2 well know ways to do this:
+
+#### Well-Known RSA public key
+
+(this is my favorite method of third-party proof!)
+
+1. Establish a relationship between the two servers (in this case a public/private RSA key pair)
+2. Encrypt your third-party predicate using the `add_rsa_third_party_caveat/5` function
+3. Send this Macaroon to the client -- which will read the location and send the caveat id to the third-party server
+4. The third-party server will use the `decrypt_rsa_third_party_caveat/3` function to take apart the cipher text into the predicate and the root key
+5. The third-party server will create a discharge Macaroon using the root key extracted from the cipher text in step 4 -- bind it to the original Macaroon
+6. Client will receive the new discharge Macaroon, and send that AND the original Macaroon back to the first-party service for verification
+
+#### Round Trip
+
+1. Generate a nonce, then make some form of remote call out to the third-party service informing it of that random nonce
+2. The third-party service should return a unique ID, use this unique ID as the caveat ID in the third-party caveat. associate the unique ID with the random nonce that was generated
+3. Send this Macaroon to the client -- which will read the location and send the caveat id to the third-party server
+4. The third-party server will use the nonce to look up what needs to be verified
+5. The third-party server will create a discharge Macaroon using the nonce you sent it as the root key -- bind it to the original Macaroon
+6. Client will receive the new discharge Macaroon, and send that AND the original Macaroon back to the first-party service for verification
 
 ## Examples
 
@@ -87,7 +110,7 @@ m = Macaroon.create_macaroon("http://my.cool.app", "public_id", "SUPER_SECRET_KE
 m = Macaroon.create_macaroon("http://my.cool.app", "public_id", "SUPER_SECRET_KEY_DO_NOT_SHARE")
   |> Macaroon.add_first_party_caveat("upload_limit = 4MB")
   |> Macaroon.add_first_party_caveat("upload_namespace = /users/1234/*")
-  |> Macaroon.add_third_party_caveat("https://auth.another.app", "identity_caveat", "SECRET_SHARED_KEY")
+  |> Macaroon.add_third_party_caveat("https://auth.another.app", "PREDICATE_HOPEFULLY_ENCRYPTED", "RANDOM_SECRET_NONCE_KEY")
 ```
 
 ### Verification
