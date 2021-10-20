@@ -90,7 +90,7 @@ defmodule Macaroon.Verification do
          %Types.Macaroon{} = macaroon,
          %VerifyContext{} = ctx
        ) do
-    sig = :crypto.hmac(:sha256, ctx.key, macaroon.public_identifier)
+    sig = :crypto.mac(:hmac, :sha256, ctx.key, macaroon.public_identifier)
 
     ctx =
       %VerifyContext{ctx | calculated_signature: sig}
@@ -129,7 +129,7 @@ defmodule Macaroon.Verification do
       end
 
     if is_met do
-      sig = :crypto.hmac(:sha256, ctx.calculated_signature, caveat.caveat_id)
+      sig = :crypto.mac(:hmac, :sha256, ctx.calculated_signature, caveat.caveat_id)
 
       %VerifyContext{ctx | calculated_signature: sig}
     else

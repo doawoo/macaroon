@@ -16,7 +16,7 @@ defmodule Macaroon do
   def create_macaroon(location, public_identifier, secret)
       when is_binary(location) and is_binary(public_identifier) and is_binary(secret) do
     derived_key = Util.Crypto.create_derived_key(secret)
-    initial_sig = :crypto.hmac(:sha256, derived_key, public_identifier)
+    initial_sig = :crypto.mac(:hmac, :sha256, derived_key, public_identifier)
 
     Types.Macaroon.build(
       location: location,
@@ -37,7 +37,7 @@ defmodule Macaroon do
         party: :first
       )
 
-    new_sig = :crypto.hmac(:sha256, macaroon.signature, predicate)
+    new_sig = :crypto.mac(:hmac, :sha256, macaroon.signature, predicate)
 
     %Types.Macaroon{
       macaroon

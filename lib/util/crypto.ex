@@ -7,15 +7,15 @@ defmodule Macaroon.Util.Crypto do
 
   @spec create_derived_key(binary) :: binary
   def create_derived_key(key) when is_binary(key) do
-    :crypto.hmac(:sha256, @key_gen_string, key)
+    :crypto.mac(:hmac, :sha256, @key_gen_string, key)
   end
 
   @spec hmac_concat(binary, binary, binary) :: binary
   def hmac_concat(key, dataA, dataB)
       when is_binary(key) and is_binary(dataA) and is_binary(dataB) do
-    hash_a = :crypto.hmac(:sha256, key, dataA)
-    hash_b = :crypto.hmac(:sha256, key, dataB)
-    :crypto.hmac(:sha256, key, hash_a <> hash_b)
+    hash_a = :crypto.mac(:hmac, :sha256, key, dataA)
+    hash_b = :crypto.mac(:hmac, :sha256, key, dataB)
+    :crypto.mac(:hmac, :sha256, key, hash_a <> hash_b)
   end
 
   @spec truncate_or_pad_string(binary, number) :: binary
