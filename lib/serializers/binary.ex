@@ -123,7 +123,7 @@ defmodule Macaroon.Serializers.Binary do
           {%Types.Macaroon{macaroon | public_identifier: id |> String.trim_trailing()}, rest}
 
         "signature " <> sig ->
-          {%Types.Macaroon{macaroon | signature: sig |> String.trim_trailing()}, rest}
+          {%Types.Macaroon{macaroon | signature: binary_part(sig, 0, 32)}, rest}
 
         "cl " <> caveat_location ->
           [vid, id | new_rest] = rest
