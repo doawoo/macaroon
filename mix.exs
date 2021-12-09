@@ -28,7 +28,7 @@ defmodule Macaroon.MixProject do
       {:ex_doc, "~> 0.24", only: :dev, runtime: false},
       {:typed_struct, "~> 0.2"},
       {:jason, "~> 1.2"},
-      {:enacl, "~> 1.1"}
+      {:enacl, "~> 1.2"}
     ]
   end
 

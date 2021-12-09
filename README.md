@@ -32,6 +32,7 @@ Requires: libsodium (can usually be easily installed using your favorite package
     * [JSON](https://github.com/doawoo/macaroon#json)
     * [Binary](https://github.com/doawoo/macaroon#binary)
 * [Misc](https://github.com/doawoo/macaroon#misc)
+  * [Building on Apple Silicon](https://github.com/doawoo/macaroon#building-on-apple-silicon)
   * [Building on Windows](https://github.com/doawoo/macaroon#building-on-windows)
 ---
 
@@ -147,6 +148,30 @@ macaroon = Macaroon.deserialize(url_base64_string, :binary)
 ```
 
 ## Misc
+
+### Building on Apple Silicon
+
+While the `enacl` dependency is awaiting some PRs to fix the build flags on Apple Silicon machines, you can work around this easily:
+
+*BEFORE* you run `mix deps.compile` do the following
+
+1. Install libsodium via Homebrew: `brew install libsodium`
+2. Export the environment variables so Clang can find the library: 
+
+```
+export CPATH=/opt/homebrew/include
+export LIBRARY_PATH=/opt/homebrew/lib
+```
+
+3. Export some extra C, C++ and Linker flags to build a dual-arch library (instead of just an x86_64 one):
+
+  ```
+  export CFLAGS="-arch arm64"
+  export CXXFLAGS="-arch arm64"
+  export LDFLAGS="-arch arm64"
+  ```
+
+4. Done! Now run `mix deps.compile`
 
 ### Building on Windows
 
