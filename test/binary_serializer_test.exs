@@ -60,5 +60,22 @@ defmodule BinarySerializerTest do
 
       assert {:error, _} = Serializers.Binary.encode(m, :v1)
     end
+
+    test "should not trim off valid signature bytes" do
+      m = Macaroon.create_macaroon(@m_location, @m_id, @m_secret)
+
+      # the last byte of the signature is a whitespace char...
+      m = %{
+        m
+        | signature:
+            <<18, 239, 236, 119, 104, 61, 252, 34, 111, 15, 233, 160, 123, 2, 32, 123, 96, 77,
+              206, 200, 244, 115, 124, 229, 79, 38, 200, 44, 168, 9, 163, 12>>
+      }
+
+      {:ok, encoded_string} = Serializers.Binary.encode(m, :v1)
+
+      decoded = Serializers.Binary.decode(encoded_string, :v1)
+      assert m == decoded
+    end
   end
 end
