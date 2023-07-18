@@ -12,6 +12,7 @@ defmodule Macaroon.Types.Macaroon do
     field(:public_identifier, String.t(), enforce: true, default: "")
     field(:signature, String.t(), enforce: true, default: nil)
     field(:caveats, list(Caveat.t()), enforce: true, default: [])
+    field(:version, Integer.t(), enforce: true, default: nil)
   end
 
   struct_builder()

@@ -102,7 +102,7 @@ defmodule Macaroon.Serializers.Binary.V2 do
     # first we pick off the version
     <<v::size(8), rest::binary>> = decoded
     # then decode the rest
-    decode_fields(rest, %{version: v})
+    decode_fields(rest, Macaroon.build([version: v]))
   end
 
   @doc """
@@ -119,7 +119,7 @@ defmodule Macaroon.Serializers.Binary.V2 do
         decode_fields(rest, mac)
 
       false ->
-        decode_fields(rest, mac)
+        decode_caveats(rest, mac, %{})
     end
   end
 
@@ -186,7 +186,15 @@ defmodule Macaroon.Serializers.Binary.V2 do
   end
 
   def add_caveat_section(%{caveats: caveats} = mac, section) do
-    Map.put(mac, :caveats, caveats ++ [section])
+    party = if :location in Map.keys(section), do: :third, else: :first
+
+    formatted = section
+      |> Map.put(:party, party)
+      |> Map.put(:caveat_id, section.public_identifier)
+      |> Enum.into([])
+      |> Caveat.build()
+
+    Map.put(mac, :caveats, caveats ++ [formatted])
   end
 
   def decode_len(<<len::size(8), _rest::binary>> = lv) do
