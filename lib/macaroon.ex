@@ -151,6 +151,10 @@ defmodule Macaroon do
     Binary.encode(macaroon, :v1)
   end
 
+  def serialize_v2(%Types.Macaroon{} = macaroon, :binary) do
+    Binary.V2.encode(macaroon)
+  end
+
   @doc """
   Deserializes a JSON or Base64 serialized Macaroon string
 
