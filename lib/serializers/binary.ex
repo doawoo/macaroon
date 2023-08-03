@@ -10,8 +10,8 @@ defmodule Macaroon.Serializers.Binary do
 
   @max_packet_size 65535
 
-  @spec encode(Macaroon.Types.Macaroon.t(), :v1) :: binary | {:error, any}
-  def encode(%Types.Macaroon{} = macaroon, :v1) do
+  @spec encode(Macaroon.Types.Macaroon.t()) :: binary | {:error, any}
+  def encode(%Types.Macaroon{version: 1} = macaroon) do
     with {:ok, location} <- create_packet_v1("location", macaroon.location),
          {:ok, id} <- create_packet_v1("identifier", macaroon.public_identifier),
          {:ok, sig} <- create_packet_v1("signature", macaroon.signature),
@@ -26,11 +26,15 @@ defmodule Macaroon.Serializers.Binary do
     end
   end
 
-  @spec decode(binary, :v1) :: Macaroon.Types.Macaroon.t()
+  def encode(%Types.Macaroon{version: 2} = macaroon), do: Macaroon.Serializers.Binary.V2.encode(macaroon)
+
+  @spec decode(binary, :v1 | :v2) :: Macaroon.Types.Macaroon.t()
   def decode(bin_macaroon, :v1) when is_binary(bin_macaroon) do
     {:ok, decoded} = Base.url_decode64(bin_macaroon, padding: false)
     do_decode_macaroon_v1(decoded)
   end
+
+  def decode(binary, :v2), do: Macaroon.Serializers.Binary.V2.decode(binary)
 
   # Encoder v1 functions
 
@@ -95,7 +99,10 @@ defmodule Macaroon.Serializers.Binary do
     packets = do_decode_packets_v1(decoded_bin, [])
     base_mac = Types.Macaroon.build()
     mac = do_parse_packets_v1(packets, base_mac)
-    %Types.Macaroon{mac | caveats: Enum.reverse(mac.caveats)}
+
+    mac
+    |> Map.put(:caveats, Enum.reverse(mac.caveats))
+    |> Map.put(:version, 1)
   end
 
   defp build_third_party_caveat(location, vid, id) do
