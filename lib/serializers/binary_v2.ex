@@ -9,6 +9,9 @@ defmodule Macaroon.Serializers.Binary.V2 do
 
   @field_types %{location: 1, public_identifier: 2, vid: 4, signature: 6, eos: 0}
 
+  @doc """
+  Encode a V2 macaroon of type %Macaroon{}.
+  """
   def encode(%Macaroon{
         public_identifier: identifier,
         location: location,
@@ -16,6 +19,17 @@ defmodule Macaroon.Serializers.Binary.V2 do
         caveats: caveats
       }) do
     encode_macaroon(2, location, identifier, caveats, signature)
+  end
+
+  @doc """
+  Decode a Base64-encoded macaroon.
+  """
+  def decode(binary) do
+    {:ok, decoded} = Base.url_decode64(binary, padding: false)
+    # first we pick off the version
+    <<v::size(8), rest::binary>> = decoded
+    # then decode the rest
+    decode_fields(rest, Macaroon.build([version: v]))
   end
 
   def encode_macaroon(version, location, identifier, caveats, signature) do
@@ -91,27 +105,17 @@ defmodule Macaroon.Serializers.Binary.V2 do
     do: encode_field(@field_types.location, location)
 
   defp encode_optional_location(_), do: {:ok, <<>>}
-  defp encode_optional_vid(%{vid: vid}), do: encode_field(@field_types.vid, vid)
+  defp encode_optional_vid(%{verification_key_id: vid}) when not is_nil(vid), do: encode_field(@field_types.vid, vid)
   defp encode_optional_vid(_), do: {:ok, <<>>}
-
-  @doc """
-  Decode a Base64 encoded macaroon.
-  """
-  def decode_mac(binary) do
-    {:ok, decoded} = Base.url_decode64(binary, padding: false)
-    # first we pick off the version
-    <<v::size(8), rest::binary>> = decoded
-    # then decode the rest
-    decode_fields(rest, Macaroon.build([version: v]))
-  end
 
   @doc """
   Decode fields of binary macaroon.
   Fields are recursively accumulated:
   - if the accumulator is empty, return the decoded macaroon.
-  - Field Type EOS (a zero byte) delimits the caveats section, and individual caveats within that section.
+  - field type EOS (a zero byte) delimits the caveats section, and individual caveats within that section.
+  - if there are no caveats in the decoded macaroon yet, decode them.
   """
-  def decode_fields(<<>>, mac), do: {:ok, mac}
+  def decode_fields(<<>>, mac), do: mac
 
   def decode_fields(<<0::size(8), rest::binary>>, %{caveats: caveats} = mac) do
     case Enum.count(caveats) > 0 do
@@ -187,10 +191,12 @@ defmodule Macaroon.Serializers.Binary.V2 do
 
   def add_caveat_section(%{caveats: caveats} = mac, section) do
     party = if :location in Map.keys(section), do: :third, else: :first
+    verification_key_id = if party == :third, do: section.vid, else: nil
 
     formatted = section
       |> Map.put(:party, party)
       |> Map.put(:caveat_id, section.public_identifier)
+      |> Map.put(:verification_key_id, verification_key_id)
       |> Enum.into([])
       |> Caveat.build()
 

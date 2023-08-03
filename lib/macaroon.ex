@@ -57,7 +57,7 @@ defmodule Macaroon do
 
   OR
 
-  retreieve an ID from the other service first and use that as the ID.
+  retrieve an ID from the other service first and use that as the ID.
 
   `caveat_key` is the freshly generated secret key that will be encrypted using the current signature of the Macaroon
 
