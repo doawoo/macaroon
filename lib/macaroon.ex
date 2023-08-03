@@ -12,8 +12,8 @@ defmodule Macaroon do
   @doc """
   Create an empty Macaroon with a provided `location`, `public_id` and `secret`
   """
-  @spec create_macaroon(binary, binary, binary) :: Types.Macaroon.t()
-  def create_macaroon(location, public_identifier, secret)
+  @spec create_macaroon(binary, binary, binary, integer) :: Types.Macaroon.t()
+  def create_macaroon(location, public_identifier, secret, version \\ 1)
       when is_binary(location) and is_binary(public_identifier) and is_binary(secret) do
     derived_key = Util.Crypto.create_derived_key(secret)
     initial_sig = :crypto.mac(:hmac, :sha256, derived_key, public_identifier)
@@ -21,7 +21,8 @@ defmodule Macaroon do
     Types.Macaroon.build(
       location: location,
       public_identifier: public_identifier,
-      signature: initial_sig
+      signature: initial_sig,
+      version: version
     )
   end
 
@@ -56,7 +57,7 @@ defmodule Macaroon do
 
   OR
 
-  retreieve an ID from the other service first and use that as the ID.
+  retrieve an ID from the other service first and use that as the ID.
 
   `caveat_key` is the freshly generated secret key that will be encrypted using the current signature of the Macaroon
 
@@ -148,7 +149,7 @@ defmodule Macaroon do
   end
 
   def serialize(%Types.Macaroon{} = macaroon, :binary) do
-    Binary.encode(macaroon, :v1)
+    Binary.encode(macaroon)
   end
 
   @doc """
@@ -165,5 +166,9 @@ defmodule Macaroon do
 
   def deserialize(macaroon_binary, :binary) when is_binary(macaroon_binary) do
     Binary.decode(macaroon_binary, :v1)
+  end
+
+  def deserialize_v2(macaroon_binary, :binary) when is_binary(macaroon_binary) do
+    Binary.decode(macaroon_binary, :v2)
   end
 end
